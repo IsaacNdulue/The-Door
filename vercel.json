@@ -1,0 +1,26 @@
+{
+    "name": "The-Door",
+    "builds": [
+      {
+        "src": "server.js",
+        "use": "@vercel/node"
+      }
+    ],
+    "headers": [
+      {
+        "source": "/api/user(.*)",
+        "headers": [
+          {
+            "key": "Access-Control-Allow-Origin",
+            "value": "*"
+          }
+        ]
+      }
+    ],
+    "rewrites": [
+      {
+        "source": "/(.*)",
+        "destination": "/server.js"
+      }
+    ]
+  }
