@@ -7,7 +7,7 @@ const {history} = require('../controllers/historyController')
 
 
 router.post('/signup', signUp);
-router.post('/otp', verifyOtp);
+router.post('/otp/:id', verifyOtp);
 router.post('/resendOtp', resendOtp);
 router.post('/login', login);
 router.get('/getone/:id', getOne);

@@ -61,7 +61,7 @@ exports.signUp = async (req, res) => {
     });
 
     // Send OTP to the user's email
-    const subject = 'Your OTP for Account Registration';
+    const subject = 'your otp for account registration';
     const html = `
       <!DOCTYPE html>
 <html lang="en">
@@ -127,10 +127,10 @@ exports.signUp = async (req, res) => {
 <body>
     <div class="email-container">
         <div class="email-header">
-            Secure Your Account
+            notification
         </div>
         <div class="email-body">
-            <p>Dear <strong>${user.firstName}</strong>,</p>
+            <p>dear <strong>${user.firstName}</strong>,</p>
             <p>Thank you for registering with <strong>The Door</strong>. To complete your account setup, please use the following One-Time Password (OTP) to verify your email address:</p>
             <div class="otp-box">${otp}</div>
             <p>This OTP is valid for the next 10 minutes. For your security, please do not share this OTP with anyone.</p>
@@ -138,7 +138,7 @@ exports.signUp = async (req, res) => {
             <p>Thank you for choosing <strong>The Door</strong>.</p>
         </div>
         <div class="email-footer">
-            <p>Need help? Visit our <a href="https://yourfintech.com/support">Support Center</a></p>
+            <p>Need help? Visit our <a href="https://thedoor.com/support">Support Center</a></p>
             <p>&copy; 2024 The Door. All rights reserved.</p>
         </div>
     </div>
@@ -171,10 +171,11 @@ exports.signUp = async (req, res) => {
 
 exports.verifyOtp = async (req, res) => {
   try {
-    const { userId, otp } = req.body;
+    const { otp } = req.body;
+    const { id } = req.params;  // Extract userId from the params
 
     // Find the user by ID
-    const user = await userModel.findById(userId);
+    const user = await userModel.findById(id);
 
     // Check if user exists
     if (!user) {
@@ -192,7 +193,7 @@ exports.verifyOtp = async (req, res) => {
 
     // Mark user as verified and clear OTP data
     user.isVerified = true;
-    user.status = "approved"
+    user.status = "approved";
     user.otp = undefined;
     user.otpExpiration = undefined;
     await user.save();
@@ -212,6 +213,7 @@ exports.verifyOtp = async (req, res) => {
     });
   }
 };
+
 
 exports.resendOtp = async (req, res) => {
   try {
@@ -323,10 +325,6 @@ exports.login = async (req,res) => {
 };
 
 exports.confirmPayment = async (req, res) => {
-
-  if (!req.body) {
-      return res.status(400).json({ message: 'Please provide payment data.' });
-  }
 
   const { amount, reference, status } = req.body; 
 
