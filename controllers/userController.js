@@ -406,3 +406,124 @@ exports.logOut= async (req,res)=>{
 // amount
 // reference
 // status
+
+
+exports.updateProfile =async(req,res)=>{
+  try{
+    const {firstName, lastName, businessName, email, password, phoneNumber,dob, country} = req.body;
+    const id = req.user.userId;
+    if (!req.body) {
+      return res.status(400).json({ message: 'Nothing to Update.' });
+  }
+  const user = await userModel.findById(id);
+  if (!user){
+    return res.status(404).json({ 
+      message:"User not found"
+    })
+  }
+  
+   const updateData = {};
+
+   if (firstName) updateData.firstName = firstName;
+   if (lastName) updateData.lastName = lastName;
+   if (businessName) updateData.businessName = businessName;
+   if (email) updateData.email = email.toLowerCase();
+   if (phoneNumber) updateData.phoneNumber = phoneNumber;
+   if (dob) updateData.dob = dob;
+   if (country) updateData.country = country;
+
+   if (password) {
+     const salt = bcrypt.genSaltSync(10);
+     const hash = bcrypt.hashSync(password, salt);
+     updateData.password = hash;
+   }
+
+   
+   const updatedUser = await userModel.findByIdAndUpdate(
+     id,
+     { $set: updateData },
+     { new: true, runValidators: true }
+   );
+
+   if (!updatedUser) {
+     return res.status(404).json({ message: 'User not found' });
+   }
+
+   return res.status(200).json({
+     message: 'User updated successfully',
+     data: updatedUser
+   });
+
+  }catch(error){
+   res.status(500).json({
+    message:error.message
+   })
+  }
+
+};
+
+exports.getOne = async(req, res)=>{
+  try{
+  const id = req.params.id;
+  if (!id){
+    return res.status(404).json({
+      message : `user with ID:${id} does not exist `
+    })
+  }
+  const user = await userModel.findById(id);
+
+  res.status(200).json({
+    message: "user found successfully",
+    data: user
+  })
+
+
+  }catch(error){
+    res.status(500).json({
+      message:error.message
+    })
+  }
+
+}
+
+exports.userProfile = async(req, res)=>{
+  try{
+  const id = req.user.userId;
+  if (!id){
+    return res.status(404).json({
+      message : `user does not exist `
+    })
+  }
+  const user = await userModel.findById(id);
+
+  res.status(200).json({
+    message: "user retrieve successfully",
+    data: user
+  })
+
+
+  }catch(error){
+    res.status(500).json({
+      message:error.message
+    })
+  }
+}
+
+
+exports.getAll = async(req, res)=>{
+  try{
+ 
+  const user = await userModel.find();
+
+  res.status(200).json({
+    message: "users retrieve successfully",
+    data: user
+  })
+
+
+  }catch(error){
+    res.status(500).json({
+      message:error.message
+    })
+  }
+}
