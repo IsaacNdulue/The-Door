@@ -36,7 +36,7 @@ const userSchema = new mongoose.Schema({
         type:String,
         required:true
     },
-    accountBalance:{
+    fiatBalance:{
         type:Number,
         default:0
     },
@@ -44,11 +44,7 @@ const userSchema = new mongoose.Schema({
         type:Number,
         default:0
     },
-    totalProfit:{
-        type:Number,
-        default:0
-    },
-    totalDeposit:{
+    totalBalance:{
         type:Number,
         default:0
     },

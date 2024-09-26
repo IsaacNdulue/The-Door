@@ -1,24 +1,41 @@
 const mongoose = require('mongoose')
 
 const koraPaySchema = new mongoose.Schema({
-    paymentproof:{
-        type:String
+    reference:{
+        type:String,
+        required:true
     },
     amount:{
         type:String,
         required:true
     },
-    reference:{
+    currency: {
+        type: String,
+        required: true
+      },
+    customer: {
+        name: {
+          type: String,
+          required: false
+        },
+        email: {
+          type: String,
+          required: true,
+          match: [/.+\@.+\..+/, 'Please fill a valid email address'] // Optional email validation
+        }
+      },
+      account_name:{
+        type: String,
+        required:false
+      },
+      status: {
+        type: String,
+        enum: ['pending', 'completed', 'failed'],
+        default: 'pending'
+      },
+    narration:{
         type:String,
-        required:true
-    },
-    status:{
-        type:String,
-        required:true
-    },
-    description:{
-        type:String,
-        required:true
+        required:false
     },
     userId: {
         type: mongoose.Schema.Types.ObjectId,

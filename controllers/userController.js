@@ -331,35 +331,76 @@ exports.login = async (req,res) => {
 };
 
 exports.confirmPayment = async (req, res) => {
-
-  const { amount, reference, status } = req.body; 
+  const { amount, reference, status, customer } = req.body; 
 
   // Validate required fields
   if (!amount) {
-      return res.status(400).json({ message: 'Amount is required.' });
+    return res.status(400).json({ message: 'Amount is required.' });
   }
   if (!reference) {
-      return res.status(400).json({ message: 'Reference is required.' });
+    return res.status(400).json({ message: 'Reference is required.' });
   }
   if (!status) {
-      return res.status(400).json({ message: 'Status is required.' });
+    return res.status(400).json({ message: 'Status is required.' });
+  }
+  if (!customer || !customer.email) {
+    return res.status(400).json({ message: 'Customer email is required.' });
   }
 
   try {
-      // Create a new payment record
-      const paymentData = await paymentModel.create({
-          amount,
-          reference,
-          status,
-      });
+    // Find the user by customer email
+    const user = await userModel.findOne({ email: customer.email });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
 
-      // Respond with the payment status
-      res.status(200).json({ message: `Payment status: ${paymentData.status}` });
+    // Create a new payment record in koraPayModel
+    const paymentData = await paymentModel.create({
+      amount,
+      reference,
+      status,
+      customer,
+      userId: user._id
+    });
+
+    // If payment is successful, update user's fiatBalance and totalBalance
+    if (status === 'completed') {
+      const paymentAmount = parseFloat(amount);
+
+      // Update user's fiatBalance and totalBalance
+      user.fiatBalance = (user.fiatBalance || 0) + paymentAmount;
+      user.totalBalance = (user.totalBalance || 0) + paymentAmount;
+
+      await user.save();
+    }
+    const subject = 'Receieved';
+    const html = `
+      <h3>Dear ${user.firstName},</h3>
+        <p>We are pleased to inform you that we have successfully received your payment of <strong>${amount} Naira</strong>.</p>
+        <p>If you have any questions, feel free to reach out to us.</p>
+        <p>Thank you for using our service!</p>
+        <br />
+        <p>Best regards,<br/>The Door</p>
+    `;
+    await sendEmail({
+      email: user.email,
+      subject,
+      html
+    });
+
+    res.status(200).json({ 
+      message: `Payment status: ${paymentData.status}`,
+      updatedBalances: status === 'completed' ? {
+        fiatBalance: user.fiatBalance,
+        totalBalance: user.totalBalance
+      } : null
+    });
   } catch (error) {
-      console.error('Error confirming payment:', error.message);
-      res.status(500).json({ message: 'Error confirming payment', error: error.message });
+    console.error('Error confirming payment:', error.message);
+    res.status(500).json({ message: 'Error confirming payment', error: error.message });
   }
 };
+
 
 exports.logOut= async (req,res)=>{
   try{
