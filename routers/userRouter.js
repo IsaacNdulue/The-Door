@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const {authenticateUser} = require('../middleware/authenticate')
-const { signUp,verifyOtp,resendOtp,login ,confirmPayment,logOut, updateProfile, getOne, userProfile, getAll}=  require('../controllers/userController')
+const { signUp,verifyOtp,resendOtp,login ,confirmPayment,getBalanceController,logOut, updateProfile, getOne, userProfile, getAll}=  require('../controllers/userController')
 const {history} = require('../controllers/historyController')
 
 
@@ -14,6 +14,7 @@ router.get('/getone/:id', getOne);
 router.get('/getAll', getAll);
 router.get('/userProfile', authenticateUser, userProfile);
 router.post('/confirmPayment', confirmPayment);
+router.get('/balance/:address', getBalanceController);
 router.get('/history',history);
 router.post('/logout', authenticateUser,logOut);
 router.post('/updateUser', authenticateUser,updateProfile);

@@ -1,3 +1,4 @@
+const axios = require('axios');
 const userModel= require('../models/userModel');
 const paymentModel= require('../models/korapay');
 const jwt = require('jsonwebtoken');
@@ -5,6 +6,11 @@ const bcrypt = require('bcrypt');
 const validation = require('../middleware/validation')
 const sendEmail = require('../helper/email')
 const bitcore = require('bitcore-lib');
+
+// const BLOCKCYPHER_API_KEY = process.env.BLOCKCYPHER_API_KEY;
+// // const BLOCKCYPHER_API_URL = 'https://api.blockcypher.com/v1/btc/main';
+// const BLOCKCYPHER_API_URL = process.env.BLOCKCYPHER_API_URL;
+
 require('dotenv').config()
 
 
@@ -404,6 +410,61 @@ exports.logOut= async (req,res)=>{
 // amount
 // reference
 // status
+
+
+// Function to update balance in MongoDB
+const updateBalanceInDB = async (address, balance) => {
+  try {
+    const result = await userModel.findOneAndUpdate(
+      { bitcoinAddress: address }, // Find user by bitcoin_address
+      { coinBalance: balance },  // Update the balance
+      { new: true } 
+    );
+
+    if (!result) {
+      throw new Error('User with the given Bitcoin address not found');
+    }
+
+    console.log('Balance updated in MongoDB:', result );
+  } catch (error) {
+    console.error('Error updating balance in MongoDB:', error.message);
+    throw new Error('Error updating balance in database');
+  }
+};
+
+// Function to get balance from BlockCypher and update in MongoDB
+const getBalanceAndUpdateDB = async (address) => {
+  try {
+  
+    const response = await axios.get(`${process.env.BLOCKCYPHER_API_URL}/addrs/${address}/balance?token=${process.env.BLOCKCYPHER_API_KEY}`);
+    const balance = response.data.balance;
+    console.log('API Response:', response.data);
+    // Update the balance in MongoDB
+    await updateBalanceInDB(address, balance);
+
+    return balance;
+  } catch (error) {
+    console.error('Error:', error.message || (error.response && error.response.data));
+    throw new Error('Error retrieving balance from BlockCypher');
+  }
+};
+
+// Express route for balance retrieval and update
+exports.getBalanceController = async (req, res) => {
+  const address = req.params.address;
+
+  if (!address) {
+    return res.status(400).json({ message: 'Bitcoin address is required' });
+  }
+
+  try {
+    const balance = await getBalanceAndUpdateDB(address);
+    res.status(200).json({ address,balance: balance !== undefined ? balance : 0  });
+  } catch (error) {
+    res.status(500).json({ message: 'Error retrieving balance', error: error.message });
+  }
+};
+
 
 
 exports.updateProfile =async(req,res)=>{
