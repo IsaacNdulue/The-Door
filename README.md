@@ -97,15 +97,13 @@ sample response
 {
   "message": "OTP sent to your email. Please verify to complete registration.",
   "data": {
-    "userId": "user_id",
     "email": "johndoe@example.com"
   }
 }
 Verify OTP
-POST /api/user/otp
+POST /api/user/otp/:id
 req.body
 {
-  "email": "johndoe@example.com",
   "otp": "123456"
 }
 
