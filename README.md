@@ -14,16 +14,16 @@ Install dependecies
 npm install
 
 create a .env and setup the following
-PORT=<Your_Port_Number>
+port=<Your_Port_Number>
 DB=<Your_MongoDB_URI>
-MAIL_PASSWORD=<Your_Mail_Password>
-HOST=<Your_Mail_Host>
-SERVICE=<Your_Mail_Service>
-USER=<Your_Mail_Username>
-JWT_SECRET=<Your_JWT_Secret>
-CLOUD_NAME=<Your_Cloudinary_Cloud_Name>
-API_KEY=<Your_Cloudinary_API_Key>
-API_SECRET=<Your_Cloudinary_API_Secret>
+mailPassword=<Your_Mail_Password>
+host=<Your_Mail_Host>
+service=<Your_Mail_Service>
+user=<Your_Mail_Username>
+jwtSecret=<Your_JWT_Secret>
+cloud_name=<Your_Cloudinary_Cloud_Name>
+api_key=<Your_Cloudinary_API_Key>
+api_secret=<Your_Cloudinary_API_Secret>
 
 start the application
 npm run dev
