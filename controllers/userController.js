@@ -330,8 +330,9 @@ exports.login = async (req,res) => {
 
 };
 
+
 exports.confirmPayment = async (req, res) => {
-  const { amount, reference, status, customerEmail,userId } = req.body; 
+  const { amount, reference, status, customerEmail, userId } = req.body; 
 
   // Validate required fields
   if (!amount) {
@@ -340,11 +341,18 @@ exports.confirmPayment = async (req, res) => {
   if (!status) {
     return res.status(400).json({ message: 'Status is required.' });
   }
-  try {
-    // Find the user by customer email
-    
+  if (!userId) {
+    return res.status(400).json({ message: 'User ID is required.' });
+  }
 
-    // Create a new payment record in koraPayModel
+  try {
+    // Find the user by userId
+    const user = await userModel.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+
+    // Create a new payment record in paymentModel
     const paymentData = await paymentModel.create({
       amount,
       reference,
@@ -363,14 +371,16 @@ exports.confirmPayment = async (req, res) => {
 
       await user.save();
     }
-    const subject = 'Receieved';
+
+    // Send payment confirmation email
+    const subject = 'Payment Received';
     const html = `
       <h3>Dear ${user.firstName},</h3>
-        <p>We are pleased to inform you that we have successfully received your payment of <strong>${amount} Naira</strong>.</p>
-        <p>If you have any questions, feel free to reach out to us.</p>
-        <p>Thank you for using our service!</p>
-        <br />
-        <p>Best regards,<br/>The Door</p>
+      <p>We are pleased to inform you that we have successfully received your payment of <strong>${amount} Naira</strong>.</p>
+      <p>If you have any questions, feel free to reach out to us.</p>
+      <p>Thank you for using our service!</p>
+      <br />
+      <p>Best regards,<br/>The Door</p>
     `;
     await sendEmail({
       email: user.email,
@@ -380,7 +390,7 @@ exports.confirmPayment = async (req, res) => {
 
     res.status(200).json({ 
       message: `Payment status: ${paymentData.status}`,
-      updatedBalances: status === 'completed' ? {
+      updatedBalances: status === 'success' ? {
         fiatBalance: user.fiatBalance,
         totalBalance: user.totalBalance
       } : null
@@ -390,6 +400,7 @@ exports.confirmPayment = async (req, res) => {
     res.status(500).json({ message: 'Error confirming payment', error: error.message });
   }
 };
+
 
 
 exports.logOut= async (req,res)=>{
