@@ -331,7 +331,7 @@ exports.login = async (req,res) => {
 };
 
 exports.confirmPayment = async (req, res) => {
-  const { amount, reference, status, customer } = req.body; 
+  const { amount, reference, status, customerEmail } = req.body; 
 
   // Validate required fields
   if (!amount) {
@@ -343,13 +343,13 @@ exports.confirmPayment = async (req, res) => {
   if (!status) {
     return res.status(400).json({ message: 'Status is required.' });
   }
-  if (!customer || !customer.email) {
+  if (!customerEmail) {
     return res.status(400).json({ message: 'Customer email is required.' });
   }
 
   try {
     // Find the user by customer email
-    const user = await userModel.findOne({ email: customer.email });
+    const user = await userModel.findOne({ email: customerEmail });
     if (!user) {
       return res.status(404).json({ message: 'User not found.' });
     }
@@ -359,12 +359,12 @@ exports.confirmPayment = async (req, res) => {
       amount,
       reference,
       status,
-      customer,
+      customerEmail,
       userId: user._id
     });
 
     // If payment is successful, update user's fiatBalance and totalBalance
-    if (status === 'completed') {
+    if (status === 'success') {
       const paymentAmount = parseFloat(amount);
 
       // Update user's fiatBalance and totalBalance

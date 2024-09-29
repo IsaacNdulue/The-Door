@@ -11,7 +11,7 @@ const koraPaySchema = new mongoose.Schema({
     currency: {
         type: String,
       },
-    customerName: {
+    customerEmail: {
           type: String,
       },
       account_name:{
