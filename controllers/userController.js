@@ -331,7 +331,7 @@ exports.login = async (req,res) => {
 };
 
 exports.confirmPayment = async (req, res) => {
-  const { amount, reference, status, customerEmail } = req.body; 
+  const { amount, reference, status, customerEmail,userId } = req.body; 
 
   // Validate required fields
   if (!amount) {
