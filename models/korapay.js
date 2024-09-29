@@ -11,7 +11,7 @@ const koraPaySchema = new mongoose.Schema({
     currency: {
         type: String,
       },
-    customerEmail: {
+    customerName: {
           type: String,
       },
       account_name:{
@@ -26,8 +26,7 @@ const koraPaySchema = new mongoose.Schema({
         required:false
     },
     userId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "userModel" 
+        type:String,
     }
 },{timestamps:true})
 

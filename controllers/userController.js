@@ -340,16 +340,9 @@ exports.confirmPayment = async (req, res) => {
   if (!status) {
     return res.status(400).json({ message: 'Status is required.' });
   }
-  if (!customerEmail) {
-    return res.status(400).json({ message: 'Customer email is required.' });
-  }
-
   try {
     // Find the user by customer email
-    const user = await userModel.findOne({ email: customerEmail });
-    if (!user) {
-      return res.status(404).json({ message: 'User not found.' });
-    }
+    
 
     // Create a new payment record in koraPayModel
     const paymentData = await paymentModel.create({
@@ -357,7 +350,7 @@ exports.confirmPayment = async (req, res) => {
       reference,
       status,
       customerEmail,
-      userId: user._id
+      userId
     });
 
     // If payment is successful, update user's fiatBalance and totalBalance
