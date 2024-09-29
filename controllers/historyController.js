@@ -3,7 +3,7 @@
 const withdrawModel = require("../models/withdrawalModel");
 const userModel = require("../models/userModel");
 
-// const depositModel =require("../model/depositModel");
+const depositModel =require("../models/korapay");
 
 
 
@@ -14,7 +14,7 @@ exports.history = async(req,res)=>{
 // const transfer = await transferModel.find({$or:[{senderId: id}, {receiverId: id}]}).lean();
 const withdraw = await withdrawModel.find({userId: id}).lean();
 
-// const deposit = await depositModel.find({userId: id}).lean();
+const deposit = await depositModel.find({userId: id}).lean();
 
 const userhistory = [...withdraw, ...deposit]
 // ...transfer, 
