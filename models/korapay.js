@@ -10,11 +10,9 @@ const koraPaySchema = new mongoose.Schema({
     },
     currency: {
         type: String,
-        required: true
       },
     customerName: {
           type: String,
-          required: false
       },
       account_name:{
         type: String,
