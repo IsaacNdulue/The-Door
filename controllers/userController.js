@@ -337,9 +337,6 @@ exports.confirmPayment = async (req, res) => {
   if (!amount) {
     return res.status(400).json({ message: 'Amount is required.' });
   }
-  if (!reference) {
-    return res.status(400).json({ message: 'Reference is required.' });
-  }
   if (!status) {
     return res.status(400).json({ message: 'Status is required.' });
   }
