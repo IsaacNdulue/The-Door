@@ -15,7 +15,7 @@ router.get('/getAll', getAll);
 router.get('/userProfile', authenticateUser, userProfile);
 router.post('/confirmPayment', confirmPayment);
 router.get('/balance/:address', getBalanceController);
-router.get('/history',history);
+router.get('/history',authenticateUser,history);
 router.post('/logout', authenticateUser,logOut);
 router.post('/updateUser', authenticateUser,updateProfile);
 module.exports = router
