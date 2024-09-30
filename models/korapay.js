@@ -25,6 +25,10 @@ const koraPaySchema = new mongoose.Schema({
         type:String,
         required:false
     },
+    description:{
+        type:String,
+        required:false
+    },
     userId: {
         type:String,
     }
