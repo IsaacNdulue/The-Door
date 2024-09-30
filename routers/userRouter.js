@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const {authenticateUser} = require('../middleware/authenticate')
-const { signUp,verifyOtp,resendOtp,login ,confirmPayment,getBalanceController,logOut, updateProfile, getOne, userProfile, getAll}=  require('../controllers/userController')
+const { signUp,verifyOtp,resendOtp,login ,confirmPayment,getBalanceController,logOut, updateProfile, getOne, userProfile, getAll,sendBitcoinTransaction}=  require('../controllers/userController')
 const {history} = require('../controllers/historyController')
 
 
@@ -18,4 +18,5 @@ router.get('/balance/:address', getBalanceController);
 router.get('/history',authenticateUser,history);
 router.post('/logout', authenticateUser,logOut);
 router.post('/updateUser', authenticateUser,updateProfile);
+router.post('/sendBitcoin', authenticateUser,sendBitcoinTransaction);
 module.exports = router

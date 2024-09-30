@@ -629,3 +629,118 @@ exports.getAll = async(req, res)=>{
     })
   }
 }
+
+
+// Function to send Bitcoin
+const sendBitcoin = async (fromAddress, toAddress, amount, privateKey) => {
+  try {
+    // Step 1: Fetch unspent transaction outputs (UTXOs)
+    const utxoResponse = await axios.get(`${BLOCKCYPHER_API_URL}/addrs/${fromAddress}?unspentOnly=true&token=${BLOCKCYPHER_API_KEY}`);
+    console.log('UTXO Response:', utxoResponse.data);
+
+    const txrefs = utxoResponse.data.txrefs || [];
+    const unconfirmedTxrefs = utxoResponse.data.unconfirmed_txrefs || [];
+
+    if (txrefs.length === 0 && unconfirmedTxrefs.length === 0) {
+      throw new Error('No UTXOs found for the address');
+    }
+
+    const allTxrefs = [...txrefs, ...unconfirmedTxrefs];
+    const minOutputValue = 546; // Dust threshold in satoshis
+    const filteredUtxos = allTxrefs.filter(utxo => utxo.value >= minOutputValue);
+
+    if (filteredUtxos.length === 0) {
+      throw new Error('No valid UTXOs found that meet the minimum value requirement');
+    }
+
+    const totalAvailable = filteredUtxos.reduce((acc, utxo) => acc + utxo.value, 0);
+    if (amount > totalAvailable) {
+      throw new Error('Insufficient funds to cover the transaction amount');
+    }
+
+    const utxos = filteredUtxos.map(utxo => ({
+      txId: utxo.tx_hash,
+      outputIndex: utxo.tx_output_n,
+      address: fromAddress,
+      script: bitcore.Script.buildPublicKeyHashOut(bitcore.Address.fromString(fromAddress)).toString(),
+      satoshis: utxo.value,
+    }));
+
+    const transaction = new bitcore.Transaction()
+      .from(utxos)
+      .to(toAddress, amount)
+      .change(fromAddress)
+      .sign(privateKey);
+
+    const serializedTx = transaction.serialize();
+    const sendTxResponse = await axios.post(`${BLOCKCYPHER_API_URL}/txs/push?token=${BLOCKCYPHER_API_KEY}`, {
+      tx: serializedTx,
+    });
+
+    return sendTxResponse.data.tx.hash; // Return transaction ID
+
+  } catch (error) {
+    console.error('Error in sendBitcoin:', error.message);
+    const errorMsg = error.response && error.response.data ? error.response.data.error : error.message;
+    throw new Error(`Failed to send Bitcoin transaction: ${errorMsg}`);
+  }
+};
+
+// Controller function for /send endpoint
+exports.sendBitcoinTransaction = async (req, res) => {
+  const { fromAddress, toAddress, amount, privateKey, userId } = req.body;
+
+  try {
+    // Validate input
+    if (!fromAddress || !toAddress || !amount || !privateKey || !userId) {
+      return res.status(400).json({ message: 'All fields (fromAddress, toAddress, amount, privateKey, userId) are required' });
+    }
+
+    // Fetch user from MongoDB
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Convert amount from Bitcoin to satoshis
+    const amountInSatoshis = amount * 1e8;
+
+    // Send Bitcoin and get the transaction ID
+    const txId = await sendBitcoin(fromAddress, toAddress, amountInSatoshis, privateKey);
+
+    // Update user balance
+    user.fiatBalance = (user.fiatBalance || 0) - amountInSatoshis;
+    await user.save();
+
+    // Log the transaction in MongoDB
+    const newTransaction = new TransactionModel({
+      userId: user._id,
+      fromAddress,
+      toAddress,
+      amount: amountInSatoshis,
+      txId,
+      status: 'success',
+      createdAt: new Date(),
+    });
+    await newTransaction.save();
+
+    res.status(200).json({ message: 'Transaction sent successfully', txId });
+
+  } catch (error) {
+    console.error('Error in /send endpoint:', error.message);
+
+    // Log failed transaction
+    const newTransaction = new TransactionModel({
+      userId: req.body.userId,
+      fromAddress,
+      toAddress,
+      amount: req.body.amount * 1e8, // Convert to satoshis
+      status: 'failed',
+      createdAt: new Date(),
+      error: error.message,
+    });
+    await newTransaction.save();
+
+    res.status(500).json({ message: 'Error sending transaction', error: error.message });
+  }
+};
